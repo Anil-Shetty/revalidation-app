@@ -1,70 +1,98 @@
-import { ConfigAppSDK } from '@contentful/app-sdk';
-import { Flex, Form, Heading, Paragraph } from '@contentful/f36-components';
-import { /* useCMA, */ useSDK } from '@contentful/react-apps-toolkit';
-import { css } from 'emotion';
-import { useCallback, useEffect, useState } from 'react';
+import { ConfigAppSDK } from '@contentful/app-sdk'
+import { Box, Card, Flex, Form, FormControl, Heading, Note, Paragraph, TextInput } from '@contentful/f36-components'
+import { useSDK } from '@contentful/react-apps-toolkit'
+import { ChangeEvent, useCallback, useEffect, useState } from 'react'
 
-export interface AppInstallationParameters {}
+export interface AppInstallationParameters {
+  endpoint: string
+}
+
+type ParameterKeys = keyof AppInstallationParameters
 
 const ConfigScreen = () => {
-  const [parameters, setParameters] = useState<AppInstallationParameters>({});
-  const sdk = useSDK<ConfigAppSDK>();
-
-  /*
-     To use the cma, inject it as follows.
-     If it is not needed, you can remove the next line.
-  */
-  // const cma = useCMA();
+  const [parameters, setParameters] = useState<AppInstallationParameters>({ endpoint: '' })
+  const [isInvalid, setIsInvalid] = useState(false)
+  const sdk = useSDK<ConfigAppSDK>()
 
   const onConfigure = useCallback(async () => {
-    // This method will be called when a user clicks on "Install"
-    // or "Save" in the configuration screen.
-    // for more details see https://www.contentful.com/developers/docs/extensibility/ui-extensions/sdk-reference/#register-an-app-configuration-hook
+    const currentState = await sdk.app.getCurrentState()
 
-    // Get current the state of EditorInterface and other entities
-    // related to this app installation
-    const currentState = await sdk.app.getCurrentState();
+    if (!parameters.endpoint) {
+      return false
+    }
 
     return {
-      // Parameters to be persisted as the app configuration.
       parameters,
-      // In case you don't want to submit any update to app
-      // locations, you can just pass the currentState as is
       targetState: currentState,
-    };
-  }, [parameters, sdk]);
+    }
+  }, [parameters, sdk])
 
   useEffect(() => {
-    // `onConfigure` allows to configure a callback to be
-    // invoked when a user attempts to install the app or update
-    // its configuration.
-    sdk.app.onConfigure(() => onConfigure());
-  }, [sdk, onConfigure]);
+    sdk.app.onConfigure(() => onConfigure())
+  }, [sdk, onConfigure])
 
   useEffect(() => {
-    (async () => {
-      // Get current parameters of the app.
-      // If the app is not installed yet, `parameters` will be `null`.
-      const currentParameters: AppInstallationParameters | null = await sdk.app.getParameters();
+    ;(async () => {
+      const currentParameters: AppInstallationParameters | null = await sdk.app.getParameters()
 
       if (currentParameters) {
-        setParameters(currentParameters);
+        setParameters(currentParameters)
       }
 
-      // Once preparation has finished, call `setReady` to hide
-      // the loading screen and present the app to a user.
-      sdk.app.setReady();
-    })();
-  }, [sdk]);
+      sdk.app.setReady()
+    })()
+  }, [sdk])
+
+  const onInputChange = (event: ChangeEvent) => {
+    const target = event.target as HTMLInputElement
+    const { name, value } = target
+
+    setParameters((prevState) => ({
+      ...prevState,
+      [name as ParameterKeys]: value,
+    }))
+    setIsInvalid(value === '')
+  }
 
   return (
-    <Flex flexDirection="column" className={css({ margin: '80px', maxWidth: '800px' })}>
-      <Form>
-        <Heading>App Config</Heading>
-        <Paragraph>Welcome to your contentful app. This is your config page.</Paragraph>
-      </Form>
-    </Flex>
-  );
-};
+    <Card style={{ maxWidth: '38rem', margin: '3rem auto' }}>
+      <Heading as="h1" className="font-bold text-center">
+        Configure Your Revalidation Application
+      </Heading>
+      <hr className="" />
+      <Box margin="spacingM">
+        <Paragraph>
+          Configure your revalidation endpoint below to enable the revalidation feature for your pages. This will allow
+          you to regenerate specific pages by calling the specified end point.
+        </Paragraph>
+        <Form>
+          <FormControl marginTop="spacingL" isRequired>
+            <FormControl.Label>Revalidation Endpoint URL</FormControl.Label>
+            <TextInput
+              defaultValue=""
+              name="endpoint"
+              type="text"
+              placeholder="Enter your revalidation endpoint (e.g., https://yourdomain.com/api/revalidate)"
+              value={parameters.endpoint}
+              onChange={onInputChange}
+              isInvalid={isInvalid}
+            />
+            <FormControl.HelpText marginTop="spacingXl" marginBottom="spacingXl">
+              <Note>
+                <Paragraph>
+                  This URL will be used to trigger the revalidation of your pages. Ensure it points to the correct API
+                  route in your Next.js application.
+                </Paragraph>
+                <Paragraph>
+                  Typically, this endpoint should handle the revalidation of specific pages when called.
+                </Paragraph>
+              </Note>
+            </FormControl.HelpText>
+          </FormControl>
+        </Form>
+      </Box>
+    </Card>
+  )
+}
 
-export default ConfigScreen;
+export default ConfigScreen

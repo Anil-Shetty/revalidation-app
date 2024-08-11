@@ -8,13 +8,14 @@
     "@contentful/f36-tokens": "4.0.2",
     "@contentful/react-apps-toolkit": "1.2.16",
     "contentful-management": "10.46.4",
-    "emotion": "10.0.27",
     "react": "18.3.1",
     "react-dom": "18.3.1"
   },
   "scripts": {
     "start": "vite",
     "build": "tsc && vite build",
+    "lint": "eslint . --ext .ts,.tsx",
+    "prettier:all": "prettier . --write",
     "create-app-definition": "contentful-app-scripts create-app-definition",
     "upload": "contentful-app-scripts upload --bundle-dir ./dist",
     "upload-ci": "contentful-app-scripts upload --ci --bundle-dir ./dist  --organization-id $CONTENTFUL_ORG_ID --definition-id $CONTENTFUL_APP_DEF_ID --token $CONTENTFUL_ACCESS_TOKEN"
@@ -25,7 +26,19 @@
     "@types/node": "16.18.38",
     "@types/react": "18.3.1",
     "@types/react-dom": "18.3.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.1",
+    "@typescript-eslint/parser": "^8.0.1",
     "@vitejs/plugin-react": "4.2.1",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-jsx-a11y": "^6.9.0",
+    "eslint-plugin-react": "^7.35.0",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "postcss": "^8.4.41",
+    "prettier": "^3.3.3",
+    "tailwindcss": "^3.4.8",
     "typescript": "5.1.6",
     "vite": "4.5.3"
   }

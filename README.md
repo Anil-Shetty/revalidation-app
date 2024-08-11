@@ -68,7 +68,7 @@ management API. For example
 
 ```js
 // Use the client
-cma.locale.getMany({}).then((locales) => console.log(locales));
+cma.locale.getMany({}).then((locales) => console.log(locales))
 ```
 
 Visit the [`contentful-management` documentation](https://www.contentful.com/developers/docs/extensibility/app-framework/sdk/#using-the-contentful-management-library)
