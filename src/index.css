@@ -1,3 +1,15 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.content-type-filter select {
+  @apply bg-blue-200 text-white border-none shadow-none rounded-l-none;
+}
+
+.content-type-filter svg {
+  @apply fill-white;
+}
+
+.content-type-filter select:focus {
+  @apply border-none shadow-none;
+}

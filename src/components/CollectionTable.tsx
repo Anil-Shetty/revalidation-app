@@ -1,13 +1,14 @@
-import { Badge, Button, IconButton, Modal, Paragraph, Skeleton, Table, Notification } from '@contentful/f36-components'
-import type { ContentTypeProps, EntryProps, KeyValueMap } from 'contentful-management'
-import { TABLE_HEADERS } from '../constants'
 import type { ContentEntitySys, PageAppSDK } from '@contentful/app-sdk'
+import { Badge, Box, Button, HelpText, IconButton, Modal, Notification, Paragraph, Skeleton, Table } from '@contentful/f36-components'
 import { useSDK } from '@contentful/react-apps-toolkit'
+import type { ContentTypeProps, EntryProps, KeyValueMap } from 'contentful-management'
 import { useState } from 'react'
+import { NOTIFICATION_MESSAGES, TABLE_HEADERS } from '../constants'
 
 interface CollectionTableProps {
   contentTypes: ContentTypeProps[]
   entries: EntryProps<KeyValueMap>[]
+  isLoading: boolean
 }
 type Method = 'GET' | 'PUT' | 'POST' | 'DELETE' | 'PATCH' | 'HEAD'
 
@@ -41,13 +42,13 @@ const CheckCircle = () => {
   )
 }
 
-const CollectionTable = ({ contentTypes, entries }: CollectionTableProps) => {
+const CollectionTable = ({ contentTypes, entries, isLoading }: CollectionTableProps) => {
   const sdk = useSDK<PageAppSDK>()
   const [selectedEntry, setSelectedEntry] = useState<EntryProps<KeyValueMap>>()
   const [isOpen, setIsOpen] = useState(false)
   const [revalidationId, setRevalidationId] = useState('')
 
-  if (entries.length === 0) {
+  if (isLoading) {
     return (
       <Table>
         <Table.Head>
@@ -64,7 +65,8 @@ const CollectionTable = ({ contentTypes, entries }: CollectionTableProps) => {
     )
   }
 
-  const handleOpen = (entry: EntryProps<KeyValueMap>) => {
+  const handleOpen = (event: React.MouseEvent<HTMLButtonElement>, entry: EntryProps<KeyValueMap>) => {
+    event.stopPropagation()
     setSelectedEntry(entry)
     setIsOpen(true)
   }
@@ -76,7 +78,13 @@ const CollectionTable = ({ contentTypes, entries }: CollectionTableProps) => {
 
   const handleConfirm = async () => {
     if (!selectedEntry || Object.keys(selectedEntry).length === 0) {
-      Notification.error('Something went wrong, Please try again later..!')
+      Notification.error(NOTIFICATION_MESSAGES.PAGE.ENTRY_DOESNT_EXIST)
+      hanldleClose()
+      return
+    }
+
+    if (!selectedEntry.fields.slug) {
+      Notification.error(NOTIFICATION_MESSAGES.PAGE.SLUG_DOESNT_EXIT)
       hanldleClose()
       return
     }
@@ -114,17 +122,28 @@ const CollectionTable = ({ contentTypes, entries }: CollectionTableProps) => {
       Object.assign(req.headers, additionalHeaders)
       const response = await fetch(req.url, req)
       const res = await response.json()
-      console
       if (!res.revalidated) {
-        throw 'Failed to revalidate'
+        throw NOTIFICATION_MESSAGES.PAGE.REVALIDATION_FAILED
       }
       Notification.success(`${entryTitle} revalidated successfully`)
     } catch (err) {
       console.log(err)
-      Notification.error('Something went wrong, Please try again later..!')
+      if (typeof err === 'string') {
+        Notification.error(err)
+      } else {
+        Notification.error(NOTIFICATION_MESSAGES.PAGE.NETWORK_ERROR)
+      }
     } finally {
       setRevalidationId('')
     }
+  }
+
+  if (entries.length === 0) {
+    return (
+      <Box marginTop="spacingM">
+        <HelpText>No entries found.</HelpText>
+      </Box>
+    )
   }
 
   return (
@@ -145,7 +164,7 @@ const CollectionTable = ({ contentTypes, entries }: CollectionTableProps) => {
               contentTypes.length && contentTypes.find((ct) => ct.sys.id === entry.sys.contentType.sys.id)
             const isLoading = entry.sys.id === revalidationId
             return (
-              <Table.Row key={entry.sys.id}>
+              <Table.Row className='cursor-pointer' key={entry.sys.id} onClick={() => sdk.navigator.openEntry(entry.sys.id, { slideIn: true })}>
                 <Table.Cell>
                   {(contentType &&
                     entry.fields[contentType.displayField] &&
@@ -153,7 +172,7 @@ const CollectionTable = ({ contentTypes, entries }: CollectionTableProps) => {
                     'Untitled'}
                 </Table.Cell>
                 <Table.Cell>{contentType ? contentType.name : entry.sys.contentType.type}</Table.Cell>
-                <Table.Cell>{entry.fields.slug[sdk.locales.default]}</Table.Cell>
+                <Table.Cell>{entry.fields.slug && entry.fields.slug[sdk.locales.default] || '-'}</Table.Cell>
                 <Table.Cell>
                   <Badge variant={getEntryStatus(entry.sys) === 'published' ? 'positive' : 'negative'}>
                     {getEntryStatus(entry.sys)}
@@ -167,7 +186,7 @@ const CollectionTable = ({ contentTypes, entries }: CollectionTableProps) => {
                     variant="primary"
                     isLoading={isLoading}
                     isDisabled={getEntryStatus(entry.sys) !== 'published' || isLoading}
-                    onClick={() => handleOpen(entry)}
+                    onClick={(event: React.MouseEvent<HTMLButtonElement>) => handleOpen(event, entry)}
                   />
                 </Table.Cell>
               </Table.Row>
