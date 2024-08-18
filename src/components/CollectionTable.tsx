@@ -1,5 +1,16 @@
 import type { ContentEntitySys, PageAppSDK } from '@contentful/app-sdk'
-import { Badge, Box, Button, HelpText, IconButton, Modal, Notification, Paragraph, Skeleton, Table } from '@contentful/f36-components'
+import {
+  Badge,
+  Box,
+  Button,
+  HelpText,
+  IconButton,
+  Modal,
+  Notification,
+  Paragraph,
+  Skeleton,
+  Table,
+} from '@contentful/f36-components'
 import { useSDK } from '@contentful/react-apps-toolkit'
 import type { ContentTypeProps, EntryProps, KeyValueMap } from 'contentful-management'
 import { useState } from 'react'
@@ -164,7 +175,11 @@ const CollectionTable = ({ contentTypes, entries, isLoading }: CollectionTablePr
               contentTypes.length && contentTypes.find((ct) => ct.sys.id === entry.sys.contentType.sys.id)
             const isLoading = entry.sys.id === revalidationId
             return (
-              <Table.Row className='cursor-pointer' key={entry.sys.id} onClick={() => sdk.navigator.openEntry(entry.sys.id, { slideIn: true })}>
+              <Table.Row
+                className="cursor-pointer"
+                key={entry.sys.id}
+                onClick={() => sdk.navigator.openEntry(entry.sys.id, { slideIn: true })}
+              >
                 <Table.Cell>
                   {(contentType &&
                     entry.fields[contentType.displayField] &&
@@ -172,7 +187,7 @@ const CollectionTable = ({ contentTypes, entries, isLoading }: CollectionTablePr
                     'Untitled'}
                 </Table.Cell>
                 <Table.Cell>{contentType ? contentType.name : entry.sys.contentType.type}</Table.Cell>
-                <Table.Cell>{entry.fields.slug && entry.fields.slug[sdk.locales.default] || '-'}</Table.Cell>
+                <Table.Cell>{(entry.fields.slug && entry.fields.slug[sdk.locales.default]) || '-'}</Table.Cell>
                 <Table.Cell>
                   <Badge variant={getEntryStatus(entry.sys) === 'published' ? 'positive' : 'negative'}>
                     {getEntryStatus(entry.sys)}
